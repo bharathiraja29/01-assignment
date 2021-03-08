@@ -1,0 +1,36 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: bebit-access-count
+spec:
+  schedule: 0 1 * * *" #Runs everyday at 1 am
+  jobTemplate:
+    spec:
+      template:
+        backoffLimit: 3
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: access-count-by-timestamp
+            image: <ourimage>
+            imagePullPolicy: IfNotPresent
+            envFrom:
+            - secretRef:
+                name: aws-creds
+            env: #Secrets should be added in advance
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: aws-secret
+                    key: AWS_SECRET_ACCESS_KEY
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: aws-secret
+                    key: AWS_ACCESS_KEY_ID
+              - name: AWS_DEFAULT_REGION
+                value: us-east-1
+              - name: INPUT_BUCKET_FILE
+                value: <s3://bucket/csvfile>
+              - name: OUTPUT_BUCKET
+                value: <s3://bucket>
